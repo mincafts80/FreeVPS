@@ -9,10 +9,6 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Set password for RDP
-      run: |
-        echo "runner:transfer" | sudo chpasswd
-        
     - name: Install GUI + RDP
       run: |
         sudo apt update
@@ -20,7 +16,7 @@ jobs:
         sudo systemctl enable xrdp
         sudo systemctl start xrdp
         echo xfce4-session > ~/.xsession
-        echo "runneradmin:transfer" | sudo chpasswd
+        echo "runner:transfer" | sudo chpasswd
 
     - name: Install cloudflared
       run: |
