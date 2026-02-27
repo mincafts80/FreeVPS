@@ -26,3 +26,4 @@ jobs:
     - name: Start tunnel (RDP)
       run: |
         cloudflared tunnel run --token ${{ secrets.CF_TUNNEL_TOKEN }}
+        cloudflared tunnel info
