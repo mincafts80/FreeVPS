@@ -1,29 +1,38 @@
-name: Linux GUI File Transfer
+name: Linux GUI with VNC
 
 on:
   workflow_dispatch:
 
 jobs:
-  gui:
+  vnc_gui:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
     steps:
-    - name: Install GUI + RDP
-      run: |
-        sudo apt update
-        sudo apt install -y xfce4 xfce4-goodies xrdp firefox
-        sudo systemctl enable xrdp
-        sudo systemctl start xrdp
-        echo xfce4-session > ~/.xsession
-        echo "runner:transfer" | sudo chpasswd
+    - name: Update system
+      run: sudo apt update && sudo apt upgrade -y
 
-    - name: Install cloudflared
+    - name: Install GNOME + VNC
+      run: |
+        sudo apt install -y gnome-session gdm3 tigervnc-standalone-server tigervnc-common
+
+    - name: Set VNC password
+      run: |
+        mkdir -p ~/.vnc
+        echo "vncpassword" | vncpasswd -f > ~/.vnc/passwd
+        chmod 600 ~/.vnc/passwd
+
+    - name: Start VNC server
+      run: |
+        vncserver :1 -geometry 1920x1080 -depth 24
+
+    - name: Install Cloudflared
       run: |
         curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
         sudo dpkg -i cloudflared.deb
 
-    - name: Start tunnel (RDP)
+    - name: Start Cloudflare Tunnel (VNC)
       run: |
-        cloudflared tunnel run --token ${{ secrets.CF_TUNNEL_TOKEN }}
-        cloudflared tunnel info
+        cloudflared tunnel --url tcp://localhost:5901 --token ${{ secrets.CF_TUNNEL_TOKEN }} &
+        sleep 5
+        cloudflared tunnel info | grep Hostname
